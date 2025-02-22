@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LearnCube Pricing Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <div class="max-w-lg mx-auto bg-white shadow-lg rounded-lg p-6 mt-10">
+    <!-- Header -->
+    <h1 class="text-2xl font-bold text-center">LearnCube Pricing Calculator</h1>
+
+    <!-- Toggle for Online School vs Virtual Classroom API -->
+    <div class="flex justify-center mt-6">
+      <button id="onlineSchool" class="toggle-btn active" onclick="togglePlatform('onlineSchool')">Online School</button>
+      <button id="virtualAPI" class="toggle-btn" onclick="togglePlatform('virtualAPI')">Virtual Classroom API</button>
+    </div>
+
+    <!-- Private Classes Slider -->
+    <div class="mt-6">
+      <label class="block text-lg font-semibold mb-2">
+        Up to <span id="privateClassValue">0</span> private classes per month
+      </label>
+      <input type="range" id="privateClassSlider" min="0" max="14" step="1" value="0" class="slider" oninput="updateSliderAndPrice('privateClassSlider', 'privateClassValue')">
+    </div>
+
+    <!-- Group Classes Slider -->
+    <div class="mt-6">
+      <label class="block text-lg font-semibold mb-2">
+        Up to <span id="groupClassValue">0</span> group classes per month
+      </label>
+      <input type="range" id="groupClassSlider" min="0" max="14" step="1" value="0" class="slider" oninput="updateSliderAndPrice('groupClassSlider', 'groupClassValue')">
+    </div>
+
+    <!-- Class Duration Selection -->
+    <div class="mt-6">
+      <p class="text-lg font-semibold mb-2">Class Duration:</p>
+      <div class="flex justify-center">
+        <button id="duration30" class="toggle-btn" onclick="selectDuration('duration30')">30 min</button>
+        <button id="duration60" class="toggle-btn active" onclick="selectDuration('duration60')">60 min</button>
+      </div>
+    </div>
+
+    <!-- Add-ons -->
+    <div class="mt-6">
+      <p class="text-lg font-semibold">Add-ons:</p>
+      <label class="block mt-2">
+        <input type="checkbox" id="premiumContent" onchange="updatePrice()"> Premium Language Content
+      </label>
+      <label class="block mt-2">
+        <input type="checkbox" id="homework" onchange="updatePrice()"> Homework
+      </label>
+      <label class="block mt-2">
+        <input type="checkbox" id="videoRecording" onchange="toggleVideoSlider()"> Video Recording
+      </label>
+    </div>
+
+    <!-- Video Recording Slider (Hidden by Default) -->
+    <div id="videoSliderContainer" class="mt-6 hidden">
+      <label class="block text-lg font-semibold mb-2">
+        Up to <span id="videoClassValue">0</span> classes recorded per month
+      </label>
+      <input type="range" id="videoClassSlider" min="0" max="14" step="1" value="0" class="slider" oninput="updateSliderAndPrice('videoClassSlider', 'videoClassValue')">
+    </div>
+
+    <!-- Subscription Plan Selection -->
+    <div class="mt-6">
+      <p class="text-lg font-semibold">Subscription Plan:</p>
+      <div class="flex justify-center">
+        <button id="monthly" class="toggle-btn" onclick="selectPayment('monthly')">Monthly</button>
+        <button id="biannual" class="toggle-btn" onclick="selectPayment('biannual')">Biannual</button>
+        <button id="annual" class="toggle-btn active" onclick="selectPayment('annual')">Annual</button>
+      </div>
+    </div>
+
+    <!-- Total Price Display -->
+    <h2 class="text-xl font-bold text-center mt-6" id="totalPrice">
+      Your subscription will come to:<br>$99.00 per month.
+    </h2>
+    <p id="priceDetails" class="text-center text-sm"></p>
+
+    <!-- See/Hide Pricing Breakdown Button (with extra spacing) -->
+    <button id="breakdownButton" onclick="toggleBreakdown()" class="text-gray-600 text-sm mt-6 block mx-auto">
+      See Pricing Breakdown
+    </button>
+    <div id="pricingBreakdown" class="hidden mt-2" style="background: #f0f0f0; padding: 10px; border-radius: 4px;"></div>
+  </div>
+
+  <script>
+    const classValues = [0, 25, 75, 150, 300, 450, 600, 750, 1000, 1500, 2000, 2500, 3000, 4000, 5000];
+
+    const pricingData = {
+      "pricing": {
+        "Virtual Classroom Group": [
+          { "classes": 25, "price": 49 },
+          { "classes": 75, "price": 99 },
+          { "classes": 150, "price": 187 },
+          { "classes": 300, "price": 349 },
+          { "classes": 450, "price": 497 },
+          { "classes": 600, "price": 649 },
+          { "classes": 750, "price": 749 },
+          { "classes": 1000, "price": 990 },
+          { "classes": 1500, "price": 1449 },
+          { "classes": 2000, "price": 1930 },
+          { "classes": 2500, "price": 2419 },
+          { "classes": 3000, "price": 2900 },
+          { "classes": 4000, "price": 3869 },
+          { "classes": 5000, "price": 4450 }
+        ],
+        "Virtual Classroom Private": [
+          { "classes": 25, "price": 25 },
+          { "classes": 75, "price": 50 },
+          { "classes": 150, "price": 94 },
+          { "classes": 300, "price": 174 },
+          { "classes": 450, "price": 249 },
+          { "classes": 600, "price": 325 },
+          { "classes": 750, "price": 375 },
+          { "classes": 1000, "price": 495 },
+          { "classes": 1500, "price": 725 },
+          { "classes": 2000, "price": 965 },
+          { "classes": 2500, "price": 1125 },
+          { "classes": 3000, "price": 1295 },
+          { "classes": 4000, "price": 1682 },
+          { "classes": 5000, "price": 1816 }
+        ],
+        "Language Content": [
+          { "classes": 25, "price": 19 },
+          { "classes": 75, "price": 49 },
+          { "classes": 150, "price": 89 },
+          { "classes": 300, "price": 149 },
+          { "classes": 450, "price": 209 },
+          { "classes": 600, "price": 249 },
+          { "classes": 750, "price": 294 },
+          { "classes": 1000, "price": 375 },
+          { "classes": 1500, "price": 549 },
+          { "classes": 2000, "price": 698 },
+          { "classes": 2500, "price": 836 },
+          { "classes": 3000, "price": 922 },
+          { "classes": 4000, "price": 1200 },
+          { "classes": 5000, "price": 1450 },
+          { "classes": 7500, "price": 2175 },
+          { "classes": 10000, "price": 2700 },
+          { "classes": 12500, "price": 3375 },
+          { "classes": 15000, "price": 4050 },
+          { "classes": 20000, "price": 4600 },
+          { "classes": 30000, "price": 6900 },
+          { "classes": 40000, "price": 9200 },
+          { "classes": 50000, "price": 9500 },
+          { "classes": 100000, "price": 19000 }
+        ],
+        "Video Recording": [
+          { "classes": 25, "price": 25 },
+          { "classes": 75, "price": 72 },
+          { "classes": 150, "price": 144 },
+          { "classes": 300, "price": 285 },
+          { "classes": 450, "price": 428 },
+          { "classes": 600, "price": 570 },
+          { "classes": 750, "price": 713 },
+          { "classes": 1000, "price": 950 },
+          { "classes": 1500, "price": 1425 },
+          { "classes": 2000, "price": 1900 },
+          { "classes": 2500, "price": 2300 },
+          { "classes": 3000, "price": 2760 },
+          { "classes": 4000, "price": 3680 },
+          { "classes": 5000, "price": 4500 },
+          { "classes": 750, "price": 6750 },
+          { "classes": 10000, "price": 8800 },
+          { "classes": 12500, "price": 10750 },
+          { "classes": 15000, "price": 12600 },
+          { "classes": 20000, "price": 16400 },
+          { "classes": 30000, "price": 24000 },
+          { "classes": 40000, "price": 31200 },
+          { "classes": 50000, "price": 38000 }
+        ],
+        "Homework": [
+          { "classes": 150, "price": 9 },
+          { "classes": 300, "price": 18 },
+          { "classes": 450, "price": 27 },
+          { "classes": 600, "price": 36 },
+          { "classes": 750, "price": 45 },
+          { "classes": 1000, "price": 57 },
+          { "classes": 1500, "price": 86 },
+          { "classes": 2000, "price": 114 },
+          { "classes": 3000, "price": 162 },
+          { "classes": 4000, "price": 216 },
+          { "classes": 5000, "price": 249 }
+        ],
+        "Base Fee": [
+          { "classes": 600, "price": 49 },
+          { "classes": 1000, "price": 97 },
+          { "classes": 2000, "price": 197 },
+          { "classes": 5000, "price": 297 },
+          { "classes": 200000, "price": 497 }
+        ]
+      }
+    };
+
+    // Floor lookup: returns the highest tier with a threshold below or equal to classesCount
+    function lookupPriceFloor(pricingArray, classesCount) {
+      if (classesCount <= 0) return 0;
+      let price = 0;
+      for (let i = 0; i < pricingArray.length; i++) {
+        if (classesCount >= pricingArray[i].classes) {
+          price = pricingArray[i].price;
+        } else {
+          break;
+        }
+      }
+      return price;
+    }
+
+    // Ceiling lookup for Homework, Base Fee, and Premium Language Content:
+    // returns the first tier whose classes threshold is >= classesCount.
+    function lookupPriceCeil(pricingArray, classesCount) {
+      for (let i = 0; i < pricingArray.length; i++) {
+        if (classesCount <= pricingArray[i].classes) {
+          return pricingArray[i].price;
+        }
+      }
+      return pricingArray[pricingArray.length - 1].price;
+    }
+
+    // Update slider label and recalc price
+    function updateSliderAndPrice(sliderId, labelId) {
+      let slider = document.getElementById(sliderId);
+      let valueIndex = parseInt(slider.value);
+      let actualValue = classValues[valueIndex];
+      document.getElementById(labelId).innerText = actualValue;
+      updatePrice();
+    }
+
+    function togglePlatform(selectedId) {
+      document.getElementById('onlineSchool').classList.remove('active');
+      document.getElementById('virtualAPI').classList.remove('active');
+      document.getElementById(selectedId).classList.add('active');
+      updatePrice();
+    }
+
+    function selectDuration(selectedId) {
+      document.getElementById('duration30').classList.remove('active');
+      document.getElementById('duration60').classList.remove('active');
+      document.getElementById(selectedId).classList.add('active');
+      updatePrice();
+    }
+
+    function selectPayment(selectedId) {
+      document.getElementById('monthly').classList.remove('active');
+      document.getElementById('biannual').classList.remove('active');
+      document.getElementById('annual').classList.remove('active');
+      document.getElementById(selectedId).classList.add('active');
+      updatePrice();
+    }
+
+    function toggleVideoSlider() {
+      let videoCheckbox = document.getElementById("videoRecording");
+      let videoSlider = document.getElementById("videoSliderContainer");
+      if (videoCheckbox.checked) {
+        videoSlider.classList.remove("hidden");
+      } else {
+        videoSlider.classList.add("hidden");
+      }
+      updatePrice();
+    }
+
+    // Toggle the visibility of the pricing breakdown and update the button text
+    function toggleBreakdown(){
+      let breakdownDiv = document.getElementById("pricingBreakdown");
+      breakdownDiv.classList.toggle("hidden");
+      if(breakdownDiv.classList.contains("hidden")){
+        document.getElementById("breakdownButton").innerText = "See Pricing Breakdown";
+      } else {
+        document.getElementById("breakdownButton").innerText = "Hide Pricing Breakdown";
+      }
+    }
+
+    // Main price calculation and breakdown function
+    function updatePrice() {
+      // Get class counts from sliders
+      let privateClasses = classValues[parseInt(document.getElementById('privateClassSlider').value)];
+      let groupClasses = classValues[parseInt(document.getElementById('groupClassSlider').value)];
+      let videoClasses = document.getElementById("videoRecording").checked ?
+                         classValues[parseInt(document.getElementById('videoClassSlider').value)] : 0;
+      let totalClassesForAddons = privateClasses + groupClasses;
+
+      // Base prices (before duration discount)
+      let basePrivatePrice = lookupPriceFloor(pricingData.pricing["Virtual Classroom Private"], privateClasses);
+      let baseGroupPrice = lookupPriceFloor(pricingData.pricing["Virtual Classroom Group"], groupClasses);
+      let videoPriceOriginal = lookupPriceFloor(pricingData.pricing["Video Recording"], videoClasses);
+
+      // Check if 30 min discount applies
+      let duration30Active = document.getElementById('duration30').classList.contains('active');
+
+      // Applied prices after 30 min discount if applicable
+      let privatePriceApplied = duration30Active ? basePrivatePrice * 0.5 : basePrivatePrice;
+      let groupPriceApplied = duration30Active ? baseGroupPrice * 0.5 : baseGroupPrice;
+      let videoPriceApplied = duration30Active ? videoPriceOriginal * 0.5 : videoPriceOriginal;
+
+      // Premium Language Content using ceiling lookup (round up to next tier)
+      let premiumPrice = document.getElementById("premiumContent").checked ?
+                         lookupPriceCeil(pricingData.pricing["Language Content"], totalClassesForAddons) : 0;
+
+      // Homework using ceiling lookup
+      let homeworkPrice = document.getElementById("homework").checked ?
+                          lookupPriceCeil(pricingData.pricing["Homework"], totalClassesForAddons) : 0;
+
+      // Base fee if Online School is selected, using ceiling lookup
+      let baseFee = document.getElementById('onlineSchool').classList.contains('active') ?
+                    lookupPriceCeil(pricingData.pricing["Base Fee"], totalClassesForAddons) : 0;
+
+      // Total monthly cost before subscription discount
+      let totalCost = privatePriceApplied + groupPriceApplied + premiumPrice + homeworkPrice + videoPriceApplied + baseFee;
+
+      // Calculate 30 min discount (difference between non-discounted and discounted prices)
+      let discount30 = duration30Active ?
+                       ((basePrivatePrice + baseGroupPrice + videoPriceOriginal) - (privatePriceApplied + groupPriceApplied + videoPriceApplied)) : 0;
+
+      // Variables for subscription details
+      let monthlyPrice, finalTotal, subscriptionDiscount, discountedTotal;
+      let subscriptionText = "";
+      let savingsText = "";
+
+      if(document.getElementById('biannual').classList.contains('active')){
+         // Biannual: Multiply undiscounted monthly total by 6 then apply 10% discount.
+         monthlyPrice = totalCost * 0.9;
+         finalTotal = totalCost * 6;
+         discountedTotal = finalTotal * 0.9;
+         subscriptionDiscount = finalTotal - discountedTotal;
+         subscriptionText = "Total for 6 months: $" + discountedTotal.toFixed(2);
+         savingsText = "Total savings: $" + subscriptionDiscount.toFixed(2);
+      } else if(document.getElementById('annual').classList.contains('active')){
+         // Annual: Multiply undiscounted monthly total by 12 then apply 15% discount.
+         monthlyPrice = totalCost * 0.85;
+         finalTotal = totalCost * 12;
+         discountedTotal = finalTotal * 0.85;
+         subscriptionDiscount = finalTotal - discountedTotal;
+         subscriptionText = "Total for 12 months: $" + discountedTotal.toFixed(2);
+         savingsText = "Total savings: $" + subscriptionDiscount.toFixed(2);
+      } else {
+         // Monthly plan: no subscription discount
+         monthlyPrice = totalCost;
+         subscriptionText = "";
+         savingsText = "";
+      }
+
+      // Update main total price display with a line break
+      document.getElementById("totalPrice").innerHTML = "Your subscription will come to:<br>$" + monthlyPrice.toFixed(2) + " per month.";
+      
+      if(subscriptionText !== "") {
+         document.getElementById("priceDetails").innerHTML = subscriptionText + "<br>" + savingsText;
+      } else {
+         document.getElementById("priceDetails").innerHTML = "";
+      }
+
+      // Build the breakdown HTML
+      let breakdownHTML = "<ul style='list-style-type: none; padding: 0; margin: 0;'>";
+      if(baseFee > 0) {
+        breakdownHTML += "<li>Base Fee: $" + baseFee.toFixed(2) + "</li>";
+      }
+      if(privateClasses > 0) {
+        breakdownHTML += "<li>Private Classes (up to " + privateClasses + "): $" + privatePriceApplied.toFixed(2) + "</li>";
+      }
+      if(groupClasses > 0) {
+        breakdownHTML += "<li>Group Classes (up to " + groupClasses + "): $" + groupPriceApplied.toFixed(2) + "</li>";
+      }
+      if(premiumPrice > 0) {
+        breakdownHTML += "<li>Premium Language Content: $" + premiumPrice.toFixed(2) + "</li>";
+      }
+      if(homeworkPrice > 0) {
+        breakdownHTML += "<li>Homework: $" + homeworkPrice.toFixed(2) + "</li>";
+      }
+      if(videoPriceApplied > 0) {
+        breakdownHTML += "<li>Video Recording (up to " + videoClasses + "): $" + videoPriceApplied.toFixed(2) + "</li>";
+      }
+      if(duration30Active) {
+        breakdownHTML += "<li>30 min discount: -$" + discount30.toFixed(2) + "</li>";
+      }
+      // Add subscription breakdown if biannual or annual plan is active.
+      if(document.getElementById('biannual').classList.contains('active') || document.getElementById('annual').classList.contains('active')){
+         breakdownHTML += "<li>Monthly cost (undiscounted): $" + totalCost.toFixed(2) + "</li>";
+         if(document.getElementById('biannual').classList.contains('active')){
+             breakdownHTML += "<li>6-month total (before discount): $" + (totalCost * 6).toFixed(2) + "</li>";
+         } else {
+             breakdownHTML += "<li>12-month total (before discount): $" + (totalCost * 12).toFixed(2) + "</li>";
+         }
+         breakdownHTML += "<li>" + savingsText + "</li>";
+         breakdownHTML += "<li><strong>Final Total: $" + discountedTotal.toFixed(2) + "</strong></li>";
+      } else {
+         breakdownHTML += "<li><strong>Final Total: $" + totalCost.toFixed(2) + "</strong></li>";
+      }
+      breakdownHTML += "</ul>";
+
+      // Update the breakdown div
+      document.getElementById("pricingBreakdown").innerHTML = breakdownHTML;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      updateSliderAndPrice('privateClassSlider', 'privateClassValue');
+      updateSliderAndPrice('groupClassSlider', 'groupClassValue');
+      updateSliderAndPrice('videoClassSlider', 'videoClassValue');
+      updatePrice();
+    });
+  </script>
+
+  <style>
+    .toggle-btn {
+      padding: 10px 20px;
+      border: 2px solid #328ccc;
+      background-color: white;
+      color: #328ccc;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 5px;
+      transition: all 0.3s ease-in-out;
+    }
+    .toggle-btn.active {
+      background-color: #328ccc;
+      color: white;
+    }
+    .toggle-btn:hover {
+      background-color: #365f8c;
+      color: white;
+    }
+    .slider {
+      width: 100%;
+      appearance: none;
+      height: 8px;
+      border-radius: 4px;
+      background: #ddd;
+      outline: none;
+      transition: all 0.3s ease-in-out;
+    }
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #328ccc;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+  </style>
+
+</body>
+</html>
