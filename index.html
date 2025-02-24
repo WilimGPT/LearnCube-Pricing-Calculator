@@ -23,7 +23,7 @@
       <label class="block text-lg font-semibold mb-2">
         Up to <span id="privateClassValue">0</span> private classes per month
       </label>
-      <input type="range" id="privateClassSlider" min="0" max="14" step="1" value="0" class="slider" oninput="updateSliderAndPrice('privateClassSlider', 'privateClassValue')">
+      <input type="range" id="privateClassSlider" min="0" max="8" step="1" value="0" class="slider" oninput="updateSliderAndPrice('privateClassSlider', 'privateClassValue')">
     </div>
 
     <!-- Group Classes Slider -->
@@ -31,7 +31,7 @@
       <label class="block text-lg font-semibold mb-2">
         Up to <span id="groupClassValue">0</span> group classes per month
       </label>
-      <input type="range" id="groupClassSlider" min="0" max="14" step="1" value="0" class="slider" oninput="updateSliderAndPrice('groupClassSlider', 'groupClassValue')">
+      <input type="range" id="groupClassSlider" min="0" max="8" step="1" value="0" class="slider" oninput="updateSliderAndPrice('groupClassSlider', 'groupClassValue')">
     </div>
 
     <!-- Class Duration Selection -->
@@ -62,7 +62,7 @@
       <label class="block text-lg font-semibold mb-2">
         Up to <span id="videoClassValue">0</span> classes recorded per month
       </label>
-      <input type="range" id="videoClassSlider" min="0" max="14" step="1" value="0" class="slider" oninput="updateSliderAndPrice('videoClassSlider', 'videoClassValue')">
+      <input type="range" id="videoClassSlider" min="0" max="8" step="1" value="0" class="slider" oninput="updateSliderAndPrice('videoClassSlider', 'videoClassValue')">
     </div>
 
     <!-- Subscription Plan Selection -->
@@ -93,7 +93,7 @@
   </div>
 
   <script>
-    const classValues = [0, 25, 75, 150, 300, 450, 600, 750, 1000, 1500, 2000, 2500, 3000, 4000, 5000];
+    const classValues = [0, 25, 75, 150, 300, 450, 600, 750, 1000];
 
     const pricingData = {
       "pricing": {
