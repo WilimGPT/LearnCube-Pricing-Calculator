@@ -39,6 +39,7 @@
       <p class="text-lg font-semibold mb-2">Class Duration:</p>
       <div class="flex justify-center">
         <button id="duration30" class="toggle-btn" onclick="selectDuration('duration30')">30 min</button>
+        <button id="duration45" class="toggle-btn" onclick="selectDuration('duration45')">45 min</button>
         <button id="duration60" class="toggle-btn active" onclick="selectDuration('duration60')">60 min</button>
       </div>
     </div>
@@ -88,8 +89,12 @@
     <div id="pricingBreakdown" class="hidden mt-2" style="background: #f0f0f0; padding: 10px; border-radius: 4px;"></div>
   </div>
 
-  <br><br><div class="text-gray-600 text-sm mt-6 block mx-auto"><center>
-    All prices provided in this calculator are indicative only.<br>For an official quote please contact your sales representative.</center>
+  <br><br>
+  <div class="text-gray-600 text-sm mt-6 block mx-auto">
+    <center>
+      All prices provided in this calculator are indicative only.<br>
+      For an official quote please contact your sales representative.
+    </center>
   </div>
 
   <script>
@@ -244,6 +249,7 @@
 
     function selectDuration(selectedId) {
       document.getElementById('duration30').classList.remove('active');
+      document.getElementById('duration45').classList.remove('active');
       document.getElementById('duration60').classList.remove('active');
       document.getElementById(selectedId).classList.add('active');
       updatePrice();
@@ -293,13 +299,20 @@
       let baseGroupPrice = lookupPriceFloor(pricingData.pricing["Virtual Classroom Group"], groupClasses);
       let videoPriceOriginal = lookupPriceFloor(pricingData.pricing["Video Recording"], videoClasses);
 
-      // Check if 30 min discount applies
-      let duration30Active = document.getElementById('duration30').classList.contains('active');
+      // Determine discount factor based on class duration selection
+      let discountFactor = 1.0;
+      if (document.getElementById('duration30').classList.contains('active')) {
+        discountFactor = 0.5; // 50% discount for 30 min
+      } else if (document.getElementById('duration45').classList.contains('active')) {
+        discountFactor = 0.75; // 25% discount for 45 min
+      } else {
+        discountFactor = 1.0; // No discount for 60 min
+      }
 
-      // Applied prices after 30 min discount if applicable
-      let privatePriceApplied = duration30Active ? basePrivatePrice * 0.5 : basePrivatePrice;
-      let groupPriceApplied = duration30Active ? baseGroupPrice * 0.5 : baseGroupPrice;
-      let videoPriceApplied = duration30Active ? videoPriceOriginal * 0.5 : videoPriceOriginal;
+      // Apply discount factor to prices
+      let privatePriceApplied = basePrivatePrice * discountFactor;
+      let groupPriceApplied = baseGroupPrice * discountFactor;
+      let videoPriceApplied = videoPriceOriginal * discountFactor;
 
       // Premium Language Content using ceiling lookup (round up to next tier)
       let premiumPrice = document.getElementById("premiumContent").checked ?
@@ -316,9 +329,8 @@
       // Total monthly cost before subscription discount
       let totalCost = privatePriceApplied + groupPriceApplied + premiumPrice + homeworkPrice + videoPriceApplied + baseFee;
 
-      // Calculate 30 min discount (difference between non-discounted and discounted prices)
-      let discount30 = duration30Active ?
-                       ((basePrivatePrice + baseGroupPrice + videoPriceOriginal) - (privatePriceApplied + groupPriceApplied + videoPriceApplied)) : 0;
+      // Calculate duration discount (difference between non-discounted and discounted prices)
+      let durationDiscount = (basePrivatePrice + baseGroupPrice + videoPriceOriginal) - (privatePriceApplied + groupPriceApplied + videoPriceApplied);
 
       // Variables for subscription details
       let monthlyPrice, finalTotal, subscriptionDiscount, discountedTotal;
@@ -377,8 +389,10 @@
       if(videoPriceApplied > 0) {
         breakdownHTML += "<li>Video Recording (up to " + videoClasses + "): $" + videoPriceApplied.toFixed(2) + "</li>";
       }
-      if(duration30Active) {
-        breakdownHTML += "<li>30 min discount: -$" + discount30.toFixed(2) + "</li>";
+      if (document.getElementById('duration30').classList.contains('active')) {
+        breakdownHTML += "<li>30 min discount: -$" + durationDiscount.toFixed(2) + "</li>";
+      } else if (document.getElementById('duration45').classList.contains('active')) {
+        breakdownHTML += "<li>45 min discount: -$" + durationDiscount.toFixed(2) + "</li>";
       }
       // Add subscription breakdown if biannual or annual plan is active.
       if(document.getElementById('biannual').classList.contains('active') || document.getElementById('annual').classList.contains('active')){
